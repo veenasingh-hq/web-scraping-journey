@@ -17,6 +17,10 @@ class BooksSpider(scrapy.Spider):
 
     def parse(self, response):
 
+        self.logger.info(
+            f"Scraping page: {response.url}"
+        )
+
         books = response.css(
             "article.product_pod"
         )
@@ -30,15 +34,26 @@ class BooksSpider(scrapy.Spider):
             item = BookItem()
 
             # -------------------------
-            # Title
+            # TITLE
             # -------------------------
 
-            item["title"] = book.css(
+            title = book.css(
                 "h3 a::attr(title)"
             ).get()
 
+            if title:
+                title = title.strip()
+            else:
+                title = "N/A"
+
+                self.logger.warning(
+                    f"Missing title: {response.url}"
+                )
+
+            item["title"] = title
+
             # -------------------------
-            # Price
+            # PRICE
             # -------------------------
 
             price = book.css(
@@ -48,20 +63,32 @@ class BooksSpider(scrapy.Spider):
             if price:
 
                 price = price.replace(
-                    "£",
-                    ""
+                    "£", ""
                 ).strip()
 
                 try:
                     price = float(price)
 
                 except ValueError:
+
+                    self.logger.warning(
+                        f"Invalid price: {price}"
+                    )
+
                     price = None
+
+            else:
+
+                self.logger.warning(
+                    f"Missing price: {response.url}"
+                )
+
+                price = None
 
             item["price"] = price
 
             # -------------------------
-            # Rating
+            # RATING
             # -------------------------
 
             rating_classes = book.css(
@@ -75,51 +102,68 @@ class BooksSpider(scrapy.Spider):
                 )
 
                 if len(rating_parts) > 1:
-
-                    item["rating"] = (
-                        rating_parts[1]
-                    )
-
+                    rating = rating_parts[1]
                 else:
-
-                    item["rating"] = None
+                    rating = "N/A"
 
             else:
 
-                item["rating"] = None
+                self.logger.warning(
+                    f"Missing rating: {response.url}"
+                )
+
+                rating = "N/A"
+
+            item["rating"] = rating
 
             # -------------------------
-            # Availability
+            # AVAILABILITY
             # -------------------------
 
             availability = book.css(
                 ".availability::text"
             ).getall()
 
-            item["availability"] = " ".join(
+            availability = " ".join(
                 text.strip()
                 for text in availability
                 if text.strip()
             )
 
+            if not availability:
+                availability = "N/A"
+
+            item["availability"] = availability
+
             # -------------------------
-            # Product URL
+            # PRODUCT URL
             # -------------------------
 
             relative_url = book.css(
                 "h3 a::attr(href)"
             ).get()
 
-            item["product_url"] = (
-                response.urljoin(
+            if relative_url:
+
+                product_url = response.urljoin(
                     relative_url
                 )
-            )
 
+            else:
+
+                self.logger.warning(
+                    f"Missing product URL: {response.url}"
+                )
+
+                product_url = None
+
+            item["product_url"] = product_url
+
+            # Send item to pipeline
             yield item
 
         # -------------------------
-        # Pagination
+        # PAGINATION
         # -------------------------
 
         next_page = response.css(
@@ -128,7 +172,17 @@ class BooksSpider(scrapy.Spider):
 
         if next_page:
 
+            self.logger.info(
+                f"Following next page: {next_page}"
+            )
+
             yield response.follow(
                 next_page,
                 callback=self.parse
+            )
+
+        else:
+
+            self.logger.info(
+                "No next page. Crawling completed."
             )

@@ -1,8 +1,7 @@
-# Day 06 - Scrapy Books Crawler
 
-A web crawling project built with Python and Scrapy.
+# Day 07 - Scraper Reliability & Error Handling
 
-This project introduces the Scrapy framework for structured crawling, pagination, item management, data extraction, and CSV export.
+This project upgrades the Day 06 Scrapy Books Crawler with reliability, validation, logging, retries, throttling, and duplicate handling.
 
 ## 🌐 Website
 
@@ -10,19 +9,22 @@ https://books.toscrape.com/
 
 Books to Scrape is a practice website designed for learning web scraping.
 
-## 🎯 Project Goals
+## 🎯 Day 07 Goals
 
-The crawler extracts:
+The scraper focuses on:
 
-- Book title
-- Price
-- Rating
-- Availability
-- Product URL
+- HTTP error awareness
+- Request timeouts
+- Retry configuration
+- Request delays
+- AutoThrottle
+- Logging
+- Missing data handling
+- Duplicate detection
+- Data validation
+- Scrapy pipelines
 
-It automatically follows pagination and collects all available books.
-
-## 🛠️ Technologies Used
+## 🛠️ Technologies
 
 - Python
 - Scrapy
@@ -36,6 +38,7 @@ day06_books/
 │
 ├── scrapy.cfg
 ├── README.md
+├── books.csv
 │
 └── day06_books/
     ├── __init__.py
@@ -47,4 +50,3 @@ day06_books/
     └── spiders/
         ├── __init__.py
         └── books.py
-
